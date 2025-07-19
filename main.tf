@@ -1,13 +1,19 @@
-
 # ==============================================================================
 # SUBNET CIDR CALCULATION AND VALIDATION
 # Generate by Claude
 # Author: lai.tran@executionlab.asia
 # ==============================================================================
 
-# Calculate base CIDR capacity
+# Calculate real base CIDR (network address) and capacity
 locals {
-  base_cidr_size = pow(2, 32 - tonumber(split("/", var.base_cidr)[1]))
+  # Extract the actual network address from the input CIDR
+  real_base_cidr = cidrsubnet(var.base_cidr, 0, 0)
+
+  # Calculate the prefix length
+  prefix_length = tonumber(split("/", var.base_cidr)[1])
+
+  # Calculate base CIDR capacity
+  base_cidr_size = pow(2, 32 - local.prefix_length)
 }
 
 # ==============================================================================
@@ -42,7 +48,7 @@ locals {
 # ==============================================================================
 
 locals {
-  error_message = "ERROR: Total required IPs (${local.total_required_ips}) exceeds base CIDR capacity (${local.base_cidr_size})"
+  error_message = "ERROR: Total required IPs (${local.total_required_ips}) exceeds base CIDR capacity (${local.base_cidr_size}). Real base CIDR: ${local.real_base_cidr}"
 
   # Validate that total IP requirements don't exceed base CIDR capacity
   validate_capacity = local.total_required_ips <= local.base_cidr_size ? true : tobool(local.error_message)
@@ -69,11 +75,12 @@ locals {
 # CIDR BLOCK GENERATION
 # ==============================================================================
 
-# Generate subnet CIDR blocks using HashiCorp subnets module
+# Generate subnet CIDR blocks using HashiCorp subnets module with real base CIDR
 module "subnet_blocks" {
   source = "hashicorp/subnets/cidr"
 
-  base_cidr_block = var.base_cidr
+  # Use the real/normalized base CIDR network address
+  base_cidr_block = local.real_base_cidr
   networks        = local.subnet_networks
 
   # Ensure validation happens before module execution
