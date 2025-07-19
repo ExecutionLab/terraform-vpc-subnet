@@ -34,7 +34,7 @@ module "subnets" {
 | Name       | Type   | Description                                 | Required |
 |------------|--------|---------------------------------------------|----------|
 | base_cidr  | string | Base CIDR block for all subnets - VPC CIDR  | Yes      |
-| subnets    | map    | Map of subnet configs (see below)           | Yes      |
+| subnets    | map    | Map of subnet configs (see above example)   | Yes      |
 
 ## Outputs
 
